@@ -26,7 +26,7 @@
 
 	<PropertyGroup>
 		<DocumentationFile>Forge.Security.Jwt.Service.xml</DocumentationFile>
-		<RepositoryUrl>https://github.com/JZO001/Forge</RepositoryUrl>
+		<RepositoryUrl>https://github.com/JZO001/Forge.Security.Jwt.Service</RepositoryUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
