@@ -114,29 +114,42 @@ namespace Forge.Security.Jwt.Service
         /// <param name="now">The time when the refresh token will be active</param>
         /// <param name="secondaryKeys">The secondary keys.</param>
         /// <returns>True, if the tokens are valid, otherwise False.</returns>
-        public bool Validate(string refreshToken, string accessToken, DateTime now, IEnumerable<JwtKeyValuePair> secondaryKeys)
+        public JwtTokenValidationResultEnum Validate(string refreshToken, string accessToken, DateTime now, IEnumerable<JwtKeyValuePair> secondaryKeys)
         {
             Initialize();
             var (principal, jwtToken) = DecodeJwtToken(accessToken);
-            if (jwtToken == null || !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256Signature))
+            if (jwtToken == null)
             {
-                return false;
+                return JwtTokenValidationResultEnum.JwtTokenDecodingError;
             }
 
-            string userName = principal.Identity.Name;
+            if (!jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256Signature))
+            {
+                return JwtTokenValidationResultEnum.SignatureAlgorithmMismatch;
+            }
+
             if (!_usersRefreshTokens.TryGetValue(refreshToken, out var existingRefreshToken))
             {
-                return false;
+                return JwtTokenValidationResultEnum.RefreshTokenNotFound;
             }
-            if (existingRefreshToken.Username != userName || existingRefreshToken.ExpireAt < now)
+
+            string userName = principal.Identity?.Name;
+            if (existingRefreshToken.Username != userName)
             {
-                return false;
+                return JwtTokenValidationResultEnum.UsernameMismatch;
             }
+
+            if (existingRefreshToken.ExpireAt < now)
+            {
+                return JwtTokenValidationResultEnum.RefreshTokenExpired;
+            }
+
             if (!existingRefreshToken.CompareSecondaryKeys(secondaryKeys))
             {
-                return false;
+                return JwtTokenValidationResultEnum.SecondaryKeysMismatch;
             }
-            return true;
+
+            return JwtTokenValidationResultEnum.Valid;
         }
 
         /// <summary>Generates new access and refresh tokens</summary>
@@ -147,9 +160,10 @@ namespace Forge.Security.Jwt.Service
         /// <returns>Jwt access and refresh token</returns>
         public JwtTokenResult Refresh(string refreshToken, string accessToken, DateTime now, IEnumerable<JwtKeyValuePair> secondaryKeys)
         {
-            if (!Validate(refreshToken, accessToken, now, secondaryKeys))
+            JwtTokenValidationResultEnum validationResult = Validate(refreshToken, accessToken, now, secondaryKeys);
+            if (validationResult != JwtTokenValidationResultEnum.Valid)
             {
-                throw new SecurityTokenException("Invalid token");
+                throw new SecurityTokenException($"Invalid token: {validationResult.ToString()}");
             }
 
             var (principal, jwtToken) = DecodeJwtToken(accessToken);

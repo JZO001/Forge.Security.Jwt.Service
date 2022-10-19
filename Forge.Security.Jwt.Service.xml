@@ -131,5 +131,14 @@
         <member name="M:Forge.Security.Jwt.Service.JwtTokenMaintenanceHostedService.Dispose">
             <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         </member>
+        <member name="T:Forge.Security.Jwt.Service.ServiceCollectionExtensions">
+            <summary>Service Collection Extension methods</summary>
+        </member>
+        <member name="M:Forge.Security.Jwt.Service.ServiceCollectionExtensions.AddForgeJwtServerAuthenticationCore(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers the Forge Jwt Server side authentication services.
+            </summary>
+            <returns>IServiceCollection</returns>
+        </member>
     </members>
 </doc>

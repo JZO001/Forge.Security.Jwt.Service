@@ -56,7 +56,7 @@ namespace Forge.Security.Jwt.Service
 
         private void DoWork(object state)
         {
-            _jwtAuthManager.RemoveExpiredRefreshTokens(DateTime.Now);
+            _jwtAuthManager.RemoveExpiredRefreshTokens(DateTime.UtcNow);
         }
 
     }
