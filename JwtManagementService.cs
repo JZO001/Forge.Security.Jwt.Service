@@ -192,7 +192,7 @@ namespace Forge.Security.Jwt.Service
                         ValidAudience = _jwtTokenConfig.Audience,
                         ValidateAudience = _jwtTokenConfig.ValidateAudience,
                         ValidateLifetime = _jwtTokenConfig.ValidateLifetime,
-                        ClockSkew = TimeSpan.FromMinutes(1)
+                        ClockSkew = TimeSpan.FromMinutes(_jwtTokenConfig.ClockSkewInMinutes)
                     },
                     out var validatedToken);
             return (principal, validatedToken as JwtSecurityToken);
