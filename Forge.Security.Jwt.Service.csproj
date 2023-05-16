@@ -1,32 +1,38 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup Label="Globals">
-	  <SccProjectName>SAK</SccProjectName>
-	  <SccProvider>SAK</SccProvider>
-	  <SccAuxPath>SAK</SccAuxPath>
-	  <SccLocalPath>SAK</SccLocalPath>
+		<SccProjectName>SAK</SccProjectName>
+		<SccProvider>SAK</SccProvider>
+		<SccAuxPath>SAK</SccAuxPath>
+		<SccLocalPath>SAK</SccLocalPath>
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
-		<Version>1.0.0.0</Version>
-		<Copyright>Copyright © Zoltan Juhasz, 2022</Copyright>
-		<Description>Forge Security Jwt Service</Description>
-		<Product>Forge: reference, practice and patterns implementations and helper(s)</Product>
-		<Company>Forge Project Contributor(s)</Company>
-		<PackageId>Forge.Security.Jwt.Service</PackageId>
-		<Authors>Zoltan Juhasz</Authors>
-		<AssemblyVersion>1.0.0.2</AssemblyVersion>
-		<Title>Forge Security Jwt Service</Title>
+		<TargetFrameworks>netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>..\.Documents\Forge.pfx</AssemblyOriginatorKeyFile>
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<ProjectGuid>{8DD7D98E-FF5A-4A4C-AAF0-0A0B85DE4A32}</ProjectGuid>
+		<DocumentationFile>Forge.Security.Jwt.Service.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<DocumentationFile>Forge.Security.Jwt.Service.xml</DocumentationFile>
+		<Product>Forge: reference, practice and patterns implementations and helper(s)</Product>
+		<Company>Forge Project Contributor(s)</Company>
+		<Copyright>Copyright © Zoltan Juhasz, 2022-2023</Copyright>
+		<PackageId>Forge.Security.Jwt.Service</PackageId>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Title>Forge Security Jwt Service</Title>
+		<Description>Forge Security Jwt Service</Description>
+		<PackageProjectUrl>https://github.com/JZO001/Forge.Security.Jwt.Service</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/JZO001/Forge.Security.Jwt.Service</RepositoryUrl>
+		<Authors>Zoltan Juhasz</Authors>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryType>git</RepositoryType>
+		<AssemblyVersion>1.5.4.0</AssemblyVersion>
+		<Version>$(AssemblyVersion)</Version>
+		<FileVersion>$(AssemblyVersion)</FileVersion>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageTags>jwt, authentication, authorization, jwt-token, sso, jwt-bearer-tokens, jwt-authentication, jwt-server, sso-authentication, sso-login, sso-solution, jwt-decode, sso-server, jwt-authorization</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -41,6 +47,21 @@
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.11" />
 	</ItemGroup>
 
+	<ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\LICENSE">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+	
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Exec Command="echo F|xcopy /r /y &quot;$(TargetDir)$(TargetName).dll&quot; &quot;$(SolutionDir).Output\$(TargetFramework)\$(TargetName).dll&quot;&#xD;&#xA;echo F|xcopy /r /y &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir).Output\$(TargetFramework)\$(TargetName).pdb&quot;&#xD;&#xA;echo F|xcopy /r /y &quot;$(TargetDir)$(TargetName).xml&quot; &quot;$(SolutionDir).Output\$(TargetFramework)\$(TargetName).xml&quot;&#xD;&#xA;" />
 	</Target>

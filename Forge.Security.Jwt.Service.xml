@@ -56,6 +56,9 @@
         <member name="T:Forge.Security.Jwt.Service.JwtTokenConfiguration">
             <summary>Configuration for token provider</summary>
         </member>
+        <member name="F:Forge.Security.Jwt.Service.JwtTokenConfiguration.ConfigurationSectionName">
+            <summary>The configuration section name</summary>
+        </member>
         <member name="P:Forge.Security.Jwt.Service.JwtTokenConfiguration.Secret">
             <summary>Gets or sets the unique secret information to generate access tokens.</summary>
             <value>The secret value. A GUID is a goog choice.</value>

@@ -5,6 +5,9 @@
     public class JwtTokenConfiguration
     {
 
+        /// <summary>The configuration section name</summary>
+        public static readonly string ConfigurationSectionName = typeof(JwtTokenConfiguration).Name;
+
         /// <summary>Gets or sets the unique secret information to generate access tokens.</summary>
         /// <value>The secret value. A GUID is a goog choice.</value>
         public string Secret { get; set; }
