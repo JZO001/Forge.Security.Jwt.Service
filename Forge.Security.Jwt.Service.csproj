@@ -8,7 +8,9 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>..\.Documents\Forge.pfx</AssemblyOriginatorKeyFile>
 		<ProjectGuid>{8DD7D98E-FF5A-4A4C-AAF0-0A0B85DE4A32}</ProjectGuid>
@@ -28,7 +30,7 @@
 		<Authors>Zoltan Juhasz</Authors>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RepositoryType>git</RepositoryType>
-		<AssemblyVersion>1.5.4.0</AssemblyVersion>
+		<AssemblyVersion>1.5.5.0</AssemblyVersion>
 		<Version>$(AssemblyVersion)</Version>
 		<FileVersion>$(AssemblyVersion)</FileVersion>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -36,11 +38,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Forge.Security.Jwt.Shared\Forge.Security.Jwt.Shared.csproj" />
+	  <None Remove="Forge.Security.Jwt.Service.csproj.vspscc" />
+	  <None Remove="Forge.Security.Jwt.Service.xml" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.31" />
+	<ItemGroup>
+		<ProjectReference Include="..\Forge.Security.Jwt.Shared\Forge.Security.Jwt.Shared.csproj" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">

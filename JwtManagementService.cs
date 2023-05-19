@@ -2,11 +2,8 @@
 using Forge.Security.Jwt.Shared.Service.Models;
 using Forge.Security.Jwt.Shared.Storage;
 using Microsoft.IdentityModel.Tokens;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -36,7 +33,6 @@ namespace Forge.Security.Jwt.Service
             _jwtTokenConfig = jwtTokenConfig;
             _tokenStorage = tokenStorage;
             _usersRefreshTokens = new ConcurrentDictionary<string, JwtRefreshToken>();
-            //tokenStorage.GetAsync().ToList().ForEach(token => _usersRefreshTokens.AddOrUpdate(token.TokenString, token, (k, v) => token));
             _secret = Encoding.ASCII.GetBytes(jwtTokenConfig.Secret);
         }
 
@@ -46,7 +42,8 @@ namespace Forge.Security.Jwt.Service
         public bool RemoveExpiredRefreshTokens(DateTime now)
         {
             Initialize();
-            var expiredTokens = _usersRefreshTokens.Where(x => x.Value.ExpireAt < now).ToList();
+
+            List<KeyValuePair<string, JwtRefreshToken>> expiredTokens = _usersRefreshTokens.Where(x => x.Value.ExpireAt < now).ToList();
             foreach (var expiredToken in expiredTokens)
             {
                 _usersRefreshTokens.TryRemove(expiredToken.Key, out _);
@@ -62,7 +59,8 @@ namespace Forge.Security.Jwt.Service
         public bool RemoveRefreshTokenByUserNameAndKeys(string userName, IEnumerable<JwtKeyValuePair> secondaryKey)
         {
             Initialize();
-            var refreshTokens = _usersRefreshTokens.Where(x => x.Value.Username == userName && x.Value.CompareSecondaryKeys(secondaryKey)).ToList();
+
+            List<KeyValuePair<string, JwtRefreshToken>> refreshTokens = _usersRefreshTokens.Where(x => x.Value.Username == userName && x.Value.CompareSecondaryKeys(secondaryKey)).ToList();
             foreach (var refreshToken in refreshTokens)
             {
                 _usersRefreshTokens.TryRemove(refreshToken.Key, out _);
@@ -81,6 +79,7 @@ namespace Forge.Security.Jwt.Service
         public JwtTokenResult GenerateTokens(string username, Claim[] claims, DateTime now, IEnumerable<JwtKeyValuePair> secondaryKeys)
         {
             Initialize();
+
             bool shouldAddAudienceClaim = string.IsNullOrWhiteSpace(claims?.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Aud)?.Value);
             JwtSecurityToken jwtToken = new JwtSecurityToken(
                 _jwtTokenConfig.Issuer,
@@ -117,6 +116,7 @@ namespace Forge.Security.Jwt.Service
         public JwtTokenValidationResultEnum Validate(string refreshToken, string accessToken, DateTime now, IEnumerable<JwtKeyValuePair> secondaryKeys)
         {
             Initialize();
+
             var (principal, jwtToken) = DecodeJwtToken(accessToken);
             if (jwtToken == null)
             {
@@ -133,7 +133,7 @@ namespace Forge.Security.Jwt.Service
                 return JwtTokenValidationResultEnum.RefreshTokenNotFound;
             }
 
-            string userName = principal.Identity?.Name;
+            string? userName = principal.Identity?.Name;
             if (existingRefreshToken.Username != userName)
             {
                 return JwtTokenValidationResultEnum.UsernameMismatch;
@@ -166,10 +166,10 @@ namespace Forge.Security.Jwt.Service
                 throw new SecurityTokenException($"Invalid token: {validationResult.ToString()}");
             }
 
-            var (principal, jwtToken) = DecodeJwtToken(accessToken);
-            string userName = principal.Identity.Name;
+            var (principal, _) = DecodeJwtToken(accessToken);
+            string? userName = principal.Identity?.Name;
 
-            return GenerateTokens(userName, principal.Claims.ToArray(), now, secondaryKeys); // need to recover the original claims
+            return GenerateTokens(userName!, principal.Claims.ToArray(), now, secondaryKeys); // need to recover the original claims
         }
 
         /// <summary>Decodes the JWT token and get back the stored information</summary>
@@ -181,7 +181,8 @@ namespace Forge.Security.Jwt.Service
             {
                 throw new SecurityTokenException("Invalid token");
             }
-            var principal = new JwtSecurityTokenHandler()
+
+            ClaimsPrincipal principal = new JwtSecurityTokenHandler()
                 .ValidateToken(token,
                     new TokenValidationParameters
                     {
@@ -195,7 +196,8 @@ namespace Forge.Security.Jwt.Service
                         ClockSkew = TimeSpan.FromMinutes(_jwtTokenConfig.ClockSkewInMinutes)
                     },
                     out var validatedToken);
-            return (principal, validatedToken as JwtSecurityToken);
+
+            return (principal, (validatedToken as JwtSecurityToken)!);
         }
 
         private static string GenerateRefreshTokenString()

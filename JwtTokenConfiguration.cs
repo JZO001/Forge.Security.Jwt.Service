@@ -10,15 +10,15 @@
 
         /// <summary>Gets or sets the unique secret information to generate access tokens.</summary>
         /// <value>The secret value. A GUID is a goog choice.</value>
-        public string Secret { get; set; }
+        public string Secret { get; set; } = null!;
 
         /// <summary>Gets or sets the issuer.</summary>
         /// <value>The issuer, for example: <a href="https://jzo.hu">https://jzo.hu</a></value>
-        public string Issuer { get; set; }
+        public string Issuer { get; set; } = null!;
 
         /// <summary>Gets or sets the audience.</summary>
         /// <value>The audience, for example: <a href="https://jzo.hu">https://jzo.hu</a></value>
-        public string Audience { get; set; }
+        public string Audience { get; set; } = null!;
 
         /// <summary>Gets or sets the access token expiration in minutes.</summary>
         /// <value>The access token expiration in minutes.

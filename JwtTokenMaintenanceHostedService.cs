@@ -1,8 +1,5 @@
 ﻿using Forge.Security.Jwt.Shared.Service;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Forge.Security.Jwt.Service
 {
@@ -11,7 +8,8 @@ namespace Forge.Security.Jwt.Service
     public class JwtTokenMaintenanceHostedService : IHostedService, IDisposable
     {
 
-        private Timer _timer;
+        private Timer? _timer;
+        private bool disposedValue;
         private readonly IJwtManagementService _jwtAuthManager;
 
         /// <summary>Initializes a new instance of the <see cref="JwtTokenMaintenanceHostedService" /> class.</summary>
@@ -47,16 +45,34 @@ namespace Forge.Security.Jwt.Service
             return Task.CompletedTask;
         }
 
+        private void DoWork(object? state)
+        {
+            _jwtAuthManager.RemoveExpiredRefreshTokens(DateTime.UtcNow);
+        }
+
+        /// <summary>Releases unmanaged and - optionally - managed resources.</summary>
+        /// <param name="disposing">
+        ///   <c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    _timer?.Dispose();
+                    _timer = null;
+                }
+
+                disposedValue = true;
+            }
+        }
+
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         public void Dispose()
         {
-            _timer?.Dispose();
-            _timer = null;
-        }
-
-        private void DoWork(object state)
-        {
-            _jwtAuthManager.RemoveExpiredRefreshTokens(DateTime.UtcNow);
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
 
     }
