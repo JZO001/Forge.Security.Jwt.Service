@@ -12,6 +12,11 @@
             <param name="jwtTokenConfig">The JWT token configuration.</param>
             <param name="tokenStorage">The JWT token persistence storage.</param>
         </member>
+        <member name="M:Forge.Security.Jwt.Service.JwtManagementService.#ctor(Microsoft.Extensions.Options.IOptions{Forge.Security.Jwt.Service.JwtTokenConfiguration},Forge.Security.Jwt.Shared.Storage.IStorage{Forge.Security.Jwt.Shared.Service.Models.JwtRefreshToken})">
+            <summary>Initializes a new instance of the <see cref="T:Forge.Security.Jwt.Service.JwtManagementService" /> class.</summary>
+            <param name="jwtTokenConfig">The JWT token configuration.</param>
+            <param name="tokenStorage">The JWT token persistence storage.</param>
+        </member>
         <member name="M:Forge.Security.Jwt.Service.JwtManagementService.RemoveExpiredRefreshTokens(System.DateTime)">
             <summary>Removes the expired refresh tokens.</summary>
             <param name="now">The time before the tokens are expired</param>

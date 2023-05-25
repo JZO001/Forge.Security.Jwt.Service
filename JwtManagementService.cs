@@ -1,6 +1,7 @@
 ﻿using Forge.Security.Jwt.Shared.Service;
 using Forge.Security.Jwt.Shared.Service.Models;
 using Forge.Security.Jwt.Shared.Storage;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
@@ -33,7 +34,15 @@ namespace Forge.Security.Jwt.Service
             _jwtTokenConfig = jwtTokenConfig;
             _tokenStorage = tokenStorage;
             _usersRefreshTokens = new ConcurrentDictionary<string, JwtRefreshToken>();
-            _secret = Encoding.ASCII.GetBytes(jwtTokenConfig.Secret);
+            _secret = Encoding.ASCII.GetBytes(_jwtTokenConfig.Secret);
+        }
+
+        /// <summary>Initializes a new instance of the <see cref="JwtManagementService" /> class.</summary>
+        /// <param name="jwtTokenConfig">The JWT token configuration.</param>
+        /// <param name="tokenStorage">The JWT token persistence storage.</param>
+        public JwtManagementService(IOptions<JwtTokenConfiguration> jwtTokenConfig, IStorage<JwtRefreshToken> tokenStorage)
+            : this(jwtTokenConfig?.Value, tokenStorage)
+        {
         }
 
         /// <summary>Removes the expired refresh tokens.</summary>
