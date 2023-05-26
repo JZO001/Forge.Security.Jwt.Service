@@ -94,6 +94,7 @@ namespace Forge.Security.Jwt.Service
                 _jwtTokenConfig.Issuer,
                 shouldAddAudienceClaim ? _jwtTokenConfig.Audience : string.Empty,
                 claims,
+                notBefore: now,
                 expires: now.AddMinutes(_jwtTokenConfig.AccessTokenExpirationInMinutes),
                 signingCredentials: new SigningCredentials(new SymmetricSecurityKey(_secret), SecurityAlgorithms.HmacSha256Signature));
             string accessToken = new JwtSecurityTokenHandler().WriteToken(jwtToken);
