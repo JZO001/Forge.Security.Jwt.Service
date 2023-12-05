@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<SignAssembly>true</SignAssembly>
@@ -22,7 +22,6 @@
 		<Company>Forge Project Contributor(s)</Company>
 		<Copyright>Copyright © Zoltan Juhasz, 2022-2023</Copyright>
 		<PackageId>Forge.Security.Jwt.Service</PackageId>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Title>Forge Security Jwt Service</Title>
 		<Description>Forge Security Jwt Service</Description>
 		<PackageProjectUrl>https://github.com/JZO001/Forge.Security.Jwt.Service</PackageProjectUrl>
@@ -30,11 +29,15 @@
 		<Authors>Zoltan Juhasz</Authors>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RepositoryType>git</RepositoryType>
-		<AssemblyVersion>1.6.0.0</AssemblyVersion>
+		<AssemblyVersion>1.6.1.0</AssemblyVersion>
 		<Version>$(AssemblyVersion)</Version>
 		<FileVersion>$(AssemblyVersion)</FileVersion>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageTags>jwt, authentication, authorization, jwt-token, sso, jwt-bearer-tokens, jwt-authentication, jwt-server, sso-authentication, sso-login, sso-solution, jwt-decode, sso-server, jwt-authorization</PackageTags>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -52,6 +55,10 @@
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
