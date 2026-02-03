@@ -9,7 +9,7 @@ namespace Forge.Security.Jwt.Service
     {
 
         private Timer? _timer;
-        private bool disposedValue;
+        private bool _disposedValue;
         private readonly IJwtManagementService _jwtAuthManager;
 
         /// <summary>Initializes a new instance of the <see cref="JwtTokenMaintenanceHostedService" /> class.</summary>
@@ -28,7 +28,7 @@ namespace Forge.Security.Jwt.Service
         public Task StartAsync(CancellationToken cancellationToken)
         {
             // remove expired refresh tokens from cache every minute
-            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+            _timer = new Timer(async (_) => await DoWorkAsync(), null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
             return Task.CompletedTask;
         }
 
@@ -45,9 +45,9 @@ namespace Forge.Security.Jwt.Service
             return Task.CompletedTask;
         }
 
-        private void DoWork(object? state)
+        private async Task DoWorkAsync()
         {
-            _jwtAuthManager.RemoveExpiredRefreshTokens(DateTime.UtcNow);
+            await _jwtAuthManager.RemoveExpiredRefreshTokensAsync(DateTime.UtcNow);
         }
 
         /// <summary>Releases unmanaged and - optionally - managed resources.</summary>
@@ -55,7 +55,7 @@ namespace Forge.Security.Jwt.Service
         ///   <c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!_disposedValue)
             {
                 if (disposing)
                 {
@@ -63,7 +63,7 @@ namespace Forge.Security.Jwt.Service
                     _timer = null;
                 }
 
-                disposedValue = true;
+                _disposedValue = true;
             }
         }
 

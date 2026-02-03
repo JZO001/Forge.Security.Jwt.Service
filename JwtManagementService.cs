@@ -28,8 +28,8 @@ namespace Forge.Security.Jwt.Service
         /// <param name="tokenStorage">The JWT token persistence storage.</param>
         public JwtManagementService(JwtTokenConfiguration jwtTokenConfig, IStorage<JwtRefreshToken> tokenStorage)
         {
-            if (jwtTokenConfig == null) throw new ArgumentNullException(nameof(jwtTokenConfig));
-            if (tokenStorage == null) throw new ArgumentNullException(nameof(tokenStorage));
+            if (jwtTokenConfig is null) throw new ArgumentNullException(nameof(jwtTokenConfig));
+            if (tokenStorage is null) throw new ArgumentNullException(nameof(tokenStorage));
 
             _jwtTokenConfig = jwtTokenConfig;
             _tokenStorage = tokenStorage;
@@ -48,16 +48,21 @@ namespace Forge.Security.Jwt.Service
         /// <summary>Removes the expired refresh tokens.</summary>
         /// <param name="now">The time before the tokens are expired</param>
         /// <returns>True, if at least one token removed, otherwise False.</returns>
-        public bool RemoveExpiredRefreshTokens(DateTime now)
+        public async ValueTask<bool> RemoveExpiredRefreshTokensAsync(DateTime now)
         {
             Initialize();
 
-            List<KeyValuePair<string, JwtRefreshToken>> expiredTokens = _usersRefreshTokens.Where(x => x.Value.ExpireAt < now).ToList();
+            List<KeyValuePair<string, JwtRefreshToken>> expiredTokens =
+                _usersRefreshTokens
+                    .Where(x => x.Value.ExpireAt < now)
+                    .ToList();
+
             foreach (var expiredToken in expiredTokens)
             {
                 _usersRefreshTokens.TryRemove(expiredToken.Key, out _);
-                _tokenStorage.RemoveAsync(expiredToken.Key);
+                await _tokenStorage.RemoveAsync(expiredToken.Key);
             }
+
             return expiredTokens.Count > 0;
         }
 
@@ -65,16 +70,21 @@ namespace Forge.Security.Jwt.Service
         /// <param name="userName">Name of the user.</param>
         /// <param name="secondaryKey">The secondary key.</param>
         /// <returns>True, if at least one token removed, otherwise False.</returns>
-        public bool RemoveRefreshTokenByUserNameAndKeys(string userName, IEnumerable<JwtKeyValuePair> secondaryKey)
+        public async ValueTask<bool> RemoveRefreshTokenByUserNameAndKeysAsync(string userName, IEnumerable<JwtKeyValuePair> secondaryKey)
         {
             Initialize();
 
-            List<KeyValuePair<string, JwtRefreshToken>> refreshTokens = _usersRefreshTokens.Where(x => x.Value.Username == userName && x.Value.CompareSecondaryKeys(secondaryKey)).ToList();
+            List<KeyValuePair<string, JwtRefreshToken>> refreshTokens =
+                _usersRefreshTokens
+                    .Where(x => x.Value.Username == userName && x.Value.CompareSecondaryKeys(secondaryKey))
+                    .ToList();
+
             foreach (var refreshToken in refreshTokens)
             {
                 _usersRefreshTokens.TryRemove(refreshToken.Key, out _);
-                _tokenStorage.RemoveAsync(refreshToken.Key);
+                await _tokenStorage.RemoveAsync(refreshToken.Key);
             }
+
             return refreshTokens.Count > 0;
         }
 

@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<SignAssembly>true</SignAssembly>
@@ -20,7 +20,7 @@
 	<PropertyGroup>
 		<Product>Forge: reference, practice and patterns implementations and helper(s)</Product>
 		<Company>Forge Project Contributor(s)</Company>
-		<Copyright>Copyright © Zoltan Juhasz, 2022-2025</Copyright>
+		<Copyright>Copyright © Zoltan Juhasz, 2022-2026</Copyright>
 		<PackageId>Forge.Security.Jwt.Service</PackageId>
 		<Title>Forge Security Jwt Service</Title>
 		<Description>Forge Security Jwt Service</Description>
@@ -29,7 +29,7 @@
 		<Authors>Zoltan Juhasz</Authors>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RepositoryType>git</RepositoryType>
-		<AssemblyVersion>1.6.4.0</AssemblyVersion>
+		<AssemblyVersion>1.7.0.0</AssemblyVersion>
 		<Version>$(AssemblyVersion)</Version>
 		<FileVersion>$(AssemblyVersion)</FileVersion>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -63,6 +63,10 @@
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

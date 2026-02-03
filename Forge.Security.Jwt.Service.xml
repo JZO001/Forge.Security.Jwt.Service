@@ -17,12 +17,12 @@
             <param name="jwtTokenConfig">The JWT token configuration.</param>
             <param name="tokenStorage">The JWT token persistence storage.</param>
         </member>
-        <member name="M:Forge.Security.Jwt.Service.JwtManagementService.RemoveExpiredRefreshTokens(System.DateTime)">
+        <member name="M:Forge.Security.Jwt.Service.JwtManagementService.RemoveExpiredRefreshTokensAsync(System.DateTime)">
             <summary>Removes the expired refresh tokens.</summary>
             <param name="now">The time before the tokens are expired</param>
             <returns>True, if at least one token removed, otherwise False.</returns>
         </member>
-        <member name="M:Forge.Security.Jwt.Service.JwtManagementService.RemoveRefreshTokenByUserNameAndKeys(System.String,System.Collections.Generic.IEnumerable{Forge.Security.Jwt.Shared.Service.Models.JwtKeyValuePair})">
+        <member name="M:Forge.Security.Jwt.Service.JwtManagementService.RemoveRefreshTokenByUserNameAndKeysAsync(System.String,System.Collections.Generic.IEnumerable{Forge.Security.Jwt.Shared.Service.Models.JwtKeyValuePair})">
             <summary>Removes the refresh token by user name and keys.</summary>
             <param name="userName">Name of the user.</param>
             <param name="secondaryKey">The secondary key.</param>
