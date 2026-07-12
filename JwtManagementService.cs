@@ -47,10 +47,11 @@ namespace Forge.Security.Jwt.Service
 
         /// <summary>Removes the expired refresh tokens.</summary>
         /// <param name="now">The time before the tokens are expired</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>True, if at least one token removed, otherwise False.</returns>
-        public async ValueTask<bool> RemoveExpiredRefreshTokensAsync(DateTime now)
+        public async ValueTask<bool> RemoveExpiredRefreshTokensAsync(DateTime now, CancellationToken cancellationToken = default)
         {
-            await EnsureInitializedAsync().ConfigureAwait(false);
+            await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
 
             List<KeyValuePair<string, JwtRefreshToken>> expiredTokens =
                 _usersRefreshTokens
@@ -69,10 +70,11 @@ namespace Forge.Security.Jwt.Service
         /// <summary>Removes the refresh token by user name and keys.</summary>
         /// <param name="userName">Name of the user.</param>
         /// <param name="secondaryKey">The secondary key.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>True, if at least one token removed, otherwise False.</returns>
-        public async ValueTask<bool> RemoveRefreshTokenByUserNameAndKeysAsync(string userName, IEnumerable<JwtKeyValuePair> secondaryKey)
+        public async ValueTask<bool> RemoveRefreshTokenByUserNameAndKeysAsync(string userName, IEnumerable<JwtKeyValuePair> secondaryKey, CancellationToken cancellationToken = default)
         {
-            await EnsureInitializedAsync().ConfigureAwait(false);
+            await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
 
             List<KeyValuePair<string, JwtRefreshToken>> refreshTokens =
                 _usersRefreshTokens
@@ -82,7 +84,7 @@ namespace Forge.Security.Jwt.Service
             foreach (KeyValuePair<string, JwtRefreshToken> refreshToken in refreshTokens)
             {
                 _usersRefreshTokens.TryRemove(refreshToken.Key, out _);
-                await _tokenStorage.RemoveAsync(refreshToken.Key).ConfigureAwait(false);
+                await _tokenStorage.RemoveAsync(refreshToken.Key, cancellationToken).ConfigureAwait(false);
             }
 
             return refreshTokens.Count > 0;
@@ -94,10 +96,11 @@ namespace Forge.Security.Jwt.Service
         /// <param name="claims">The claims.</param>
         /// <param name="now">Indicates, when the token will be activated.</param>
         /// <param name="secondaryKeys">The secondary keys to identify a token.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>Jwt access and refresh token</returns>
-        public async Task<JwtTokenResult> GenerateTokensAsync(string username, Claim[] claims, DateTime now, IEnumerable<JwtKeyValuePair> secondaryKeys)
+        public async Task<JwtTokenResult> GenerateTokensAsync(string username, Claim[] claims, DateTime now, IEnumerable<JwtKeyValuePair> secondaryKeys, CancellationToken cancellationToken = default)
         {
-            await EnsureInitializedAsync().ConfigureAwait(false);
+            await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
 
             bool shouldAddAudienceClaim = string.IsNullOrWhiteSpace(claims?.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Aud)?.Value);
             JwtSecurityToken jwtToken = new JwtSecurityToken(
@@ -120,7 +123,7 @@ namespace Forge.Security.Jwt.Service
 
             _usersRefreshTokens.AddOrUpdate(refreshToken.TokenString, refreshToken, (s, t) => refreshToken);
 
-            await _tokenStorage.SetAsync(refreshToken.TokenString, refreshToken).ConfigureAwait(false);
+            await _tokenStorage.SetAsync(refreshToken.TokenString, refreshToken, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             return new JwtTokenResult
             {
@@ -135,10 +138,16 @@ namespace Forge.Security.Jwt.Service
         /// <param name="accessToken">The access token.</param>
         /// <param name="now">The time when the refresh token will be active</param>
         /// <param name="secondaryKeys">The secondary keys.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>True, if the tokens are valid, otherwise False.</returns>
-        public async Task<JwtTokenValidationResultEnum> ValidateAsync(string refreshToken, string accessToken, DateTime now, IEnumerable<JwtKeyValuePair> secondaryKeys)
+        public async Task<JwtTokenValidationResultEnum> ValidateAsync(
+            string refreshToken,
+            string accessToken,
+            DateTime now,
+            IEnumerable<JwtKeyValuePair> secondaryKeys,
+            CancellationToken cancellationToken = default)
         {
-            await EnsureInitializedAsync().ConfigureAwait(false);
+            await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
 
             var (principal, jwtToken) = DecodeJwtToken(accessToken);
             if (jwtToken is null)
@@ -180,10 +189,11 @@ namespace Forge.Security.Jwt.Service
         /// <param name="accessToken">The access token.</param>
         /// <param name="now">The time when the refresh token will be active</param>
         /// <param name="secondaryKeys">The secondary keys to identify the refresh token</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>Jwt access and refresh token</returns>
-        public async Task<JwtTokenResult> RefreshAsync(string refreshToken, string accessToken, DateTime now, IEnumerable<JwtKeyValuePair> secondaryKeys)
+        public async Task<JwtTokenResult> RefreshAsync(string refreshToken, string accessToken, DateTime now, IEnumerable<JwtKeyValuePair> secondaryKeys, CancellationToken cancellationToken = default)
         {
-            JwtTokenValidationResultEnum validationResult = await ValidateAsync(refreshToken, accessToken, now, secondaryKeys).ConfigureAwait(false);
+            JwtTokenValidationResultEnum validationResult = await ValidateAsync(refreshToken, accessToken, now, secondaryKeys, cancellationToken).ConfigureAwait(false);
             if (validationResult != JwtTokenValidationResultEnum.Valid)
             {
                 throw new SecurityTokenException($"Invalid token: {validationResult.ToString()}");
@@ -192,7 +202,7 @@ namespace Forge.Security.Jwt.Service
             var (principal, _) = DecodeJwtToken(accessToken);
             string? userName = principal.Identity?.Name;
 
-            return await GenerateTokensAsync(userName!, principal.Claims.ToArray(), now, secondaryKeys).ConfigureAwait(false); // need to recover the original claims
+            return await GenerateTokensAsync(userName!, principal.Claims.ToArray(), now, secondaryKeys, cancellationToken).ConfigureAwait(false); // need to recover the original claims
         }
 
         /// <summary>Decodes the JWT token and get back the stored information</summary>
@@ -231,11 +241,11 @@ namespace Forge.Security.Jwt.Service
             return Convert.ToBase64String(randomNumber);
         }
 
-        private async Task EnsureInitializedAsync()
+        private async Task EnsureInitializedAsync(CancellationToken cancellationToken)
         {
             if (_initialized) return;                                    // gyors út: ha kész, nincs zárolás
 
-            await _initGate.WaitAsync().ConfigureAwait(false);           // egyszerre csak egy hívó léphet be
+            await _initGate.WaitAsync(cancellationToken).ConfigureAwait(false);           // egyszerre csak egy hívó léphet be
             try
             {
                 if (_initialized) return;                                // dupla-ellenőrzés a kapun belül
