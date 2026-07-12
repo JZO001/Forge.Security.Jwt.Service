@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
-using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -21,7 +20,8 @@ namespace Forge.Security.Jwt.Service
         private readonly JwtTokenConfiguration _jwtTokenConfig;
         private readonly IStorage<JwtRefreshToken> _tokenStorage;
         private readonly byte[] _secret;
-        private bool _initialized = false;
+        private volatile bool _initialized = false;
+        private readonly SemaphoreSlim _initGate = new SemaphoreSlim(1, 1);
 
         /// <summary>Initializes a new instance of the <see cref="JwtManagementService" /> class.</summary>
         /// <param name="jwtTokenConfig">The JWT token configuration.</param>
@@ -50,17 +50,17 @@ namespace Forge.Security.Jwt.Service
         /// <returns>True, if at least one token removed, otherwise False.</returns>
         public async ValueTask<bool> RemoveExpiredRefreshTokensAsync(DateTime now)
         {
-            Initialize();
+            await EnsureInitializedAsync().ConfigureAwait(false);
 
             List<KeyValuePair<string, JwtRefreshToken>> expiredTokens =
                 _usersRefreshTokens
                     .Where(x => x.Value.ExpireAt < now)
                     .ToList();
 
-            foreach (var expiredToken in expiredTokens)
+            foreach (KeyValuePair<string, JwtRefreshToken> expiredToken in expiredTokens)
             {
                 _usersRefreshTokens.TryRemove(expiredToken.Key, out _);
-                await _tokenStorage.RemoveAsync(expiredToken.Key);
+                await _tokenStorage.RemoveAsync(expiredToken.Key).ConfigureAwait(false);
             }
 
             return expiredTokens.Count > 0;
@@ -72,17 +72,17 @@ namespace Forge.Security.Jwt.Service
         /// <returns>True, if at least one token removed, otherwise False.</returns>
         public async ValueTask<bool> RemoveRefreshTokenByUserNameAndKeysAsync(string userName, IEnumerable<JwtKeyValuePair> secondaryKey)
         {
-            Initialize();
+            await EnsureInitializedAsync().ConfigureAwait(false);
 
             List<KeyValuePair<string, JwtRefreshToken>> refreshTokens =
                 _usersRefreshTokens
                     .Where(x => x.Value.Username == userName && x.Value.CompareSecondaryKeys(secondaryKey))
                     .ToList();
 
-            foreach (var refreshToken in refreshTokens)
+            foreach (KeyValuePair<string, JwtRefreshToken> refreshToken in refreshTokens)
             {
                 _usersRefreshTokens.TryRemove(refreshToken.Key, out _);
-                await _tokenStorage.RemoveAsync(refreshToken.Key);
+                await _tokenStorage.RemoveAsync(refreshToken.Key).ConfigureAwait(false);
             }
 
             return refreshTokens.Count > 0;
@@ -95,9 +95,9 @@ namespace Forge.Security.Jwt.Service
         /// <param name="now">Indicates, when the token will be activated.</param>
         /// <param name="secondaryKeys">The secondary keys to identify a token.</param>
         /// <returns>Jwt access and refresh token</returns>
-        public JwtTokenResult GenerateTokens(string username, Claim[] claims, DateTime now, IEnumerable<JwtKeyValuePair> secondaryKeys)
+        public async Task<JwtTokenResult> GenerateTokensAsync(string username, Claim[] claims, DateTime now, IEnumerable<JwtKeyValuePair> secondaryKeys)
         {
-            Initialize();
+            await EnsureInitializedAsync().ConfigureAwait(false);
 
             bool shouldAddAudienceClaim = string.IsNullOrWhiteSpace(claims?.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Aud)?.Value);
             JwtSecurityToken jwtToken = new JwtSecurityToken(
@@ -115,9 +115,12 @@ namespace Forge.Security.Jwt.Service
                 TokenString = GenerateRefreshTokenString(),
                 ExpireAt = now.AddMinutes(_jwtTokenConfig.RefreshTokenExpirationInMinutes)
             };
-            if (secondaryKeys != null) refreshToken.SecondaryKeys.AddRange(secondaryKeys);
+
+            if (secondaryKeys is not null) refreshToken.SecondaryKeys.AddRange(secondaryKeys);
+
             _usersRefreshTokens.AddOrUpdate(refreshToken.TokenString, refreshToken, (s, t) => refreshToken);
-            _tokenStorage.SetAsync(refreshToken.TokenString, refreshToken);
+
+            await _tokenStorage.SetAsync(refreshToken.TokenString, refreshToken).ConfigureAwait(false);
 
             return new JwtTokenResult
             {
@@ -127,18 +130,18 @@ namespace Forge.Security.Jwt.Service
             };
         }
 
-        /// <summary>Validate the specified access and refresh tokens.</summary>
+        /// <summary>ValidateAsync the specified access and refresh tokens.</summary>
         /// <param name="refreshToken">The refresh token.</param>
         /// <param name="accessToken">The access token.</param>
         /// <param name="now">The time when the refresh token will be active</param>
         /// <param name="secondaryKeys">The secondary keys.</param>
         /// <returns>True, if the tokens are valid, otherwise False.</returns>
-        public JwtTokenValidationResultEnum Validate(string refreshToken, string accessToken, DateTime now, IEnumerable<JwtKeyValuePair> secondaryKeys)
+        public async Task<JwtTokenValidationResultEnum> ValidateAsync(string refreshToken, string accessToken, DateTime now, IEnumerable<JwtKeyValuePair> secondaryKeys)
         {
-            Initialize();
+            await EnsureInitializedAsync().ConfigureAwait(false);
 
             var (principal, jwtToken) = DecodeJwtToken(accessToken);
-            if (jwtToken == null)
+            if (jwtToken is null)
             {
                 return JwtTokenValidationResultEnum.JwtTokenDecodingError;
             }
@@ -178,9 +181,9 @@ namespace Forge.Security.Jwt.Service
         /// <param name="now">The time when the refresh token will be active</param>
         /// <param name="secondaryKeys">The secondary keys to identify the refresh token</param>
         /// <returns>Jwt access and refresh token</returns>
-        public JwtTokenResult Refresh(string refreshToken, string accessToken, DateTime now, IEnumerable<JwtKeyValuePair> secondaryKeys)
+        public async Task<JwtTokenResult> RefreshAsync(string refreshToken, string accessToken, DateTime now, IEnumerable<JwtKeyValuePair> secondaryKeys)
         {
-            JwtTokenValidationResultEnum validationResult = Validate(refreshToken, accessToken, now, secondaryKeys);
+            JwtTokenValidationResultEnum validationResult = await ValidateAsync(refreshToken, accessToken, now, secondaryKeys).ConfigureAwait(false);
             if (validationResult != JwtTokenValidationResultEnum.Valid)
             {
                 throw new SecurityTokenException($"Invalid token: {validationResult.ToString()}");
@@ -189,7 +192,7 @@ namespace Forge.Security.Jwt.Service
             var (principal, _) = DecodeJwtToken(accessToken);
             string? userName = principal.Identity?.Name;
 
-            return GenerateTokens(userName!, principal.Claims.ToArray(), now, secondaryKeys); // need to recover the original claims
+            return await GenerateTokensAsync(userName!, principal.Claims.ToArray(), now, secondaryKeys).ConfigureAwait(false); // need to recover the original claims
         }
 
         /// <summary>Decodes the JWT token and get back the stored information</summary>
@@ -228,13 +231,26 @@ namespace Forge.Security.Jwt.Service
             return Convert.ToBase64String(randomNumber);
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        private void Initialize()
+        private async Task EnsureInitializedAsync()
         {
-            if (!_initialized)
+            if (_initialized) return;                                    // gyors út: ha kész, nincs zárolás
+
+            await _initGate.WaitAsync().ConfigureAwait(false);           // egyszerre csak egy hívó léphet be
+            try
             {
-                _tokenStorage.GetAsync().GetAwaiter().GetResult().ToList().ForEach(token => _usersRefreshTokens.AddOrUpdate(token.TokenString, token, (k, v) => token));
-                _initialized = true;
+                if (_initialized) return;                                // dupla-ellenőrzés a kapun belül
+
+                IEnumerable<JwtRefreshToken> tokens = await _tokenStorage.GetAsync().ConfigureAwait(false);
+                foreach (JwtRefreshToken token in tokens)
+                {
+                    _usersRefreshTokens.AddOrUpdate(token.TokenString, token, (k, v) => token);
+                }
+
+                _initialized = true;                                     // CSAK a teljes feltöltés után billen át
+            }
+            finally
+            {
+                _initGate.Release();
             }
         }
 

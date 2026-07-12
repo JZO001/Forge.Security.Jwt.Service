@@ -28,7 +28,7 @@
             <param name="secondaryKey">The secondary key.</param>
             <returns>True, if at least one token removed, otherwise False.</returns>
         </member>
-        <member name="M:Forge.Security.Jwt.Service.JwtManagementService.GenerateTokens(System.String,System.Security.Claims.Claim[],System.DateTime,System.Collections.Generic.IEnumerable{Forge.Security.Jwt.Shared.Service.Models.JwtKeyValuePair})">
+        <member name="M:Forge.Security.Jwt.Service.JwtManagementService.GenerateTokensAsync(System.String,System.Security.Claims.Claim[],System.DateTime,System.Collections.Generic.IEnumerable{Forge.Security.Jwt.Shared.Service.Models.JwtKeyValuePair})">
             <summary>Generates a new token.</summary>
             <param name="username">The username.
             Mandatory.</param>
@@ -37,15 +37,15 @@
             <param name="secondaryKeys">The secondary keys to identify a token.</param>
             <returns>Jwt access and refresh token</returns>
         </member>
-        <member name="M:Forge.Security.Jwt.Service.JwtManagementService.Validate(System.String,System.String,System.DateTime,System.Collections.Generic.IEnumerable{Forge.Security.Jwt.Shared.Service.Models.JwtKeyValuePair})">
-            <summary>Validate the specified access and refresh tokens.</summary>
+        <member name="M:Forge.Security.Jwt.Service.JwtManagementService.ValidateAsync(System.String,System.String,System.DateTime,System.Collections.Generic.IEnumerable{Forge.Security.Jwt.Shared.Service.Models.JwtKeyValuePair})">
+            <summary>ValidateAsync the specified access and refresh tokens.</summary>
             <param name="refreshToken">The refresh token.</param>
             <param name="accessToken">The access token.</param>
             <param name="now">The time when the refresh token will be active</param>
             <param name="secondaryKeys">The secondary keys.</param>
             <returns>True, if the tokens are valid, otherwise False.</returns>
         </member>
-        <member name="M:Forge.Security.Jwt.Service.JwtManagementService.Refresh(System.String,System.String,System.DateTime,System.Collections.Generic.IEnumerable{Forge.Security.Jwt.Shared.Service.Models.JwtKeyValuePair})">
+        <member name="M:Forge.Security.Jwt.Service.JwtManagementService.RefreshAsync(System.String,System.String,System.DateTime,System.Collections.Generic.IEnumerable{Forge.Security.Jwt.Shared.Service.Models.JwtKeyValuePair})">
             <summary>Generates new access and refresh tokens</summary>
             <param name="refreshToken">The refresh token.</param>
             <param name="accessToken">The access token.</param>

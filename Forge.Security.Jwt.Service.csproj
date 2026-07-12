@@ -29,11 +29,12 @@
 		<Authors>Zoltan Juhasz</Authors>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RepositoryType>git</RepositoryType>
-		<AssemblyVersion>1.7.1.0</AssemblyVersion>
+		<AssemblyVersion>1.7.2.0</AssemblyVersion>
 		<Version>$(AssemblyVersion)</Version>
 		<FileVersion>$(AssemblyVersion)</FileVersion>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageTags>jwt, authentication, authorization, jwt-token, sso, jwt-bearer-tokens, jwt-authentication, jwt-server, sso-authentication, sso-login, sso-solution, jwt-decode, sso-server, jwt-authorization</PackageTags>
+		<PackageOutputPath>../.Documents/</PackageOutputPath>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">

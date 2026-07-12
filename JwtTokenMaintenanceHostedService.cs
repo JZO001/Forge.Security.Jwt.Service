@@ -28,7 +28,7 @@ namespace Forge.Security.Jwt.Service
         public Task StartAsync(CancellationToken cancellationToken)
         {
             // remove expired refresh tokens from cache every minute
-            _timer = new Timer(async (_) => await DoWorkAsync(), null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+            _timer = new Timer(async (_) => await DoWorkAsync().ConfigureAwait(false), null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
             return Task.CompletedTask;
         }
 
@@ -47,7 +47,7 @@ namespace Forge.Security.Jwt.Service
 
         private async Task DoWorkAsync()
         {
-            await _jwtAuthManager.RemoveExpiredRefreshTokensAsync(DateTime.UtcNow);
+            await _jwtAuthManager.RemoveExpiredRefreshTokensAsync(DateTime.UtcNow).ConfigureAwait(false);
         }
 
         /// <summary>Releases unmanaged and - optionally - managed resources.</summary>
